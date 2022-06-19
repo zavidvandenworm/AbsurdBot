@@ -37,13 +37,13 @@ Example: `-any2mp3 https://example.com/video.mp4`<br/>
 Trim an audio file, arguments in milliseconds.<br/>
 Example: `-audio_trim https://example.com/audio.mp3 1000 5000` - would cut the first second off, and would cut off at 5 seconds = 4 second output.<br/>
 
-**breakcoregen (url_to_audio) (bpm) (optional: soundfont)**<br/>
+**breakcoregen (url_to_audio) (bpm) (optional: soundpack)**<br/>
 Adds breaks, and compresses the input.<br/>
 Example: `-breakcoregen https://example.com/audio.mp3 165 default1`<br/>
 Sound packs will use different breaks for the output.<br/>
 
 **clubgen (url_to_audio) (bpm) (optional: target_bpm)**<br/>
-Adds a bunchy beat, slows down, and adds reverb to the input.<br/>
+Adds a punchy beat, slows down, and adds reverb to the input.<br/>
 Example: `-clubgen https://example.com/audio.mp3 165 150`<br/>
 Changing the target BPM will affect how much the input gets slowed down.<br/>
 
