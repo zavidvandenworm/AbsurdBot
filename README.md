@@ -1,17 +1,20 @@
 # AbsurdiBot
 A discord bot with a variety of creative commands, such as image/audio editing, "remixing" music and more.
 
+### Note: don't expect a polished product. This was done for fun, and half of the code here is still in the "do first, refactor later" phase. A lot is outright broken/unused (but all commands are functional).
+
 ## Setup
 ### Step 1: install package requirements.
 ```
 pip install -r requirements.txt
 ````
 ### Step 2: Fill in service_setup.py
-Can be found in ./everything/service_setup.py
+Can be found in ./cogs/scripts/service_setup.py
 You will need:
 1.  A valid [discord bot token](https://discord.com/developers/applications)
 2.  An [OpenAI key](https://beta.openai.com/account/api-keys) (Note: OpenAI's gives you 16$ in tokens for free)
-4.  A [Reddit application](https://old.reddit.com/prefs/apps/) (Client ID, Client Secret, User Agent)
+3.  A [Reddit application](https://old.reddit.com/prefs/apps/) (Client ID, Client Secret, User Agent)
+4.  A (http(s)) web server for large files
 
 ### Step 3: Run main.py
 If everything went right, this should start without any errors.
@@ -55,6 +58,7 @@ You can also overlay the output onto an audio file.<br/>
 Example: `-drum_machine 1000100010001000 130 808_kick https://example.com/audio.mp3`<br/>
 
 **list_samples**<br/>
-Simply lists all available samples for drum_machine.<br/>
+Simply lists all available samples for drum_machine and breakcoregen.<br/>
 Example: `-list_samples`<br/>
 
+### (List is a WIP)
