@@ -1,6 +1,8 @@
 # AbsurdiBot
 A discord bot with a variety of creative commands, such as image/audio editing, "remixing" music and more.
 
+Some context: this was originally made for the absurdismworld discord server, and as such some references to it might be found in the code.
+
 ### Note: don't expect a polished product. This was done for fun, and half of the code here is still in the "do first, refactor later" phase. A lot is outright broken/unused (but all commands are functional).
 
 ## Setup
