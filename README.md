@@ -21,6 +21,7 @@ You will need:
 If everything went right, this should start without any errors.
 
 You're done!
+The prefix of the bot can be changed in main.py -> prefix variable
 
 ## Available commands
 ### Artificial Intelligence
