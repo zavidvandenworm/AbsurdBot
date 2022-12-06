@@ -133,9 +133,9 @@ class WorkDir:
             shutil.rmtree(self.directory)
 
 
-def speed_change(sound, speed=1.0):
+def speed_change(sound, speed=1.0, framerate: int = None):
     sound_altered = sound._spawn(sound.raw_data, overrides={
-        "frame_rate": int(sound.frame_rate * speed)
+        "frame_rate": (int(sound.frame_rate * speed)) if framerate is None else framerate
     })
     return sound_altered.set_frame_rate(sound.frame_rate)
 
