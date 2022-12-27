@@ -78,12 +78,8 @@ with AudioFile('./test.wav') as f:
   audio = f.read(f.frames)
   samplerate = f.samplerate
 
-# Make a Pedalboard object, containing multiple plugins:
 board = Pedalboard([Compressor(-5, 1), Reverb(room_size=0.13, wet_level=0.18, dry_level=0.25, width=1, damping=0.75), Chorus(rate_hz=0.1, centre_delay_ms=7, feedback=0.07)])
-
-# Run the audio through this pedalboard!
 effected = board(audio, samplerate)
 
-# Write the audio back as a wav file:
 with AudioFile('processed-output.wav', 'w', samplerate, effected.shape[0]) as f:
   f.write(effected)
