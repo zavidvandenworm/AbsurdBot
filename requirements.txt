@@ -5,3 +5,4 @@ beautifulsoup4~=4.11.1
 Pillow~=9.3.0
 glitch_this
 discord.py
+ffmpeg-python
