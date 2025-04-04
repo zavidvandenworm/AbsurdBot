@@ -6,7 +6,6 @@ import os
 from discord.ext import commands
 
 from .scripts.bot_global_stuff import *
-from .scripts.service_setup import www_dir
 from .scripts.embeds import *
 
 
@@ -14,32 +13,32 @@ class AudioManipulationCommands(commands.Cog, name="Audio"):
     def __init__(self):
         pass
 
-    @commands.command(brief="Audio visualizer")
-    async def audiovisual(self, ctx, audio_url):
-        www_url = www_dir
-        work_dir = WorkDir()
-        audio_local = media_require(audio_url, "audio", work_dir.directory)
-        if audio_local is False:
-            await ctx.send(embed=e_daw_audio)
-        p = subprocess.Popen(["python3", "./scripts/audiovisual.py", work_dir.directory, audio_local,
-                              str(ctx.author.id)], shell=False,
-                             cwd=os.path.dirname(os.path.realpath(__file__)))
-        timer = 0
-        while True:
-            if p.poll() is not None:
-                print(f"completed after {str(timer)} with exit code {str(p.poll())}")
-                if p.poll() != 0:
-                    embed = discord.Embed(
-                        title="Visualizer failed!",
-                        description="Try converting your audio file using $any2mp3, and retrying."
-                    )
-                    await ctx.send(embed=embed)
-                    return
-                final = f"{www_url}/{str(ctx.author.id)}.mp4"
-                await ctx.send(final)
-                return
-            timer += .5
-            await asyncio.sleep(.5)
+    # @commands.command(brief="Audio visualizer")
+    # async def audiovisual(self, ctx, audio_url):
+    #     www_url = www_dir
+    #     work_dir = WorkDir()
+    #     audio_local = media_require(audio_url, "audio", work_dir.directory)
+    #     if audio_local is False:
+    #         await ctx.send(embed=e_daw_audio)
+    #     p = subprocess.Popen(["python3", "./scripts/audiovisual.py", work_dir.directory, audio_local,
+    #                           str(ctx.author.id)], shell=False,
+    #                          cwd=os.path.dirname(os.path.realpath(__file__)))
+    #     timer = 0
+    #     while True:
+    #         if p.poll() is not None:
+    #             print(f"completed after {str(timer)} with exit code {str(p.poll())}")
+    #             if p.poll() != 0:
+    #                 embed = discord.Embed(
+    #                     title="Visualizer failed!",
+    #                     description="Try converting your audio file using $any2mp3, and retrying."
+    #                 )
+    #                 await ctx.send(embed=embed)
+    #                 return
+    #             final = f"{www_url}/{str(ctx.author.id)}.mp4"
+    #             await ctx.send(final)
+    #             return
+    #         timer += .5
+    #         await asyncio.sleep(.5)
 
     @commands.command(brief="Convert any audio/video file into a mp3!")
     async def any2mp3(self, ctx, audio_link):
