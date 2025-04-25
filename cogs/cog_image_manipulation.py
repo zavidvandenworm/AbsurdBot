@@ -125,7 +125,7 @@ class ImageManipulationCommands(commands.Cog, name="Image"):
         def wtbb(text: str, out: str):
             base = Image.new("RGB", (nw, nh), color=(0, 162, 237))
             d = ImageDraw.Draw(base)
-            w, h = d.textsize(text, font=font)
+            w, h = d.textlength(text, font=font)
             d.text(((nw - w) / 1.97, (nh - h) / 1.97), text, fill=(0, 0, 0), font=font)
             d.text(((nw - w) / 2, (nh - h) / 2), text, fill=(240, 240, 240), font=font)
             base.save(out)
