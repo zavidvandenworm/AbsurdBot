@@ -8,15 +8,20 @@ from cogs.cog_internet_stuff import InternetCommands
 from cogs.cog_generic import GenericCog
 from os import environ
 
+TOKEN = environ["DISCORD_TOKEN"]
+
+if TOKEN == "":
+    raise Exception("DISCORD_TOKEN environment variable not set")
+
 intents = discord.Intents().default()
 intents.members = True
 intents.message_content = True
 
-prefix = "-"
+prefix = environ["BOT_PREFIX"] or "$"
 
 activity = discord.Activity(
     type=discord.ActivityType.listening,
-    name=f"{prefix}help",
+    name=f"{prefix}help - hello haii",
     intents=intents
 )
 
@@ -33,6 +38,6 @@ async def main():
         await bot.add_cog(InternetCommands())
         await bot.add_cog(ImageManipulationCommands())
         await bot.add_cog(AudioManipulationCommands())
-        await bot.start(environ["DISCORD_TOKEN"])
+        await bot.start(TOKEN)
 
 asyncio.run(main())

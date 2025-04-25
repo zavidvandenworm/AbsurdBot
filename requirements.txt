@@ -1,8 +1,7 @@
-pydub~=0.25.1
-requests~=2.32.0
-bs4~=0.0.1
-beautifulsoup4~=4.11.1
-Pillow~=9.3.0
+pydub
+requests
+beautifulsoup4
+Pillow
 glitch_this
 discord.py
 ffmpeg-python
