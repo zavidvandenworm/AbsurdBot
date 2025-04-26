@@ -6,7 +6,7 @@ from PIL import Image, ImageEnhance, ImageChops, ImageDraw, ImageFont
 from discord.ext import commands
 from glitch_this import ImageGlitcher
 from random import randint
-from duckduckgo_search import ddg_images
+from duckduckgo_search import DDGS
 from .scripts.bot_global_stuff import *
 import os
 import io
@@ -171,7 +171,7 @@ class ImageManipulationCommands(commands.Cog, name="Image"):
                 save_all=True, duration=1000, loop=0)
         await ctx.send(file=discord.File(fp=f"{work_dir.directory}/top{str(x)}.gif"))
 
-    @commands.command(brief="Generate a top 10 list from a query, using DuckDuckGo.")
+    @commands.command(brief="Generate a top 10 list from a search term(s).")
     async def top10_ddg(self, ctx, *, search_term: str):
         nw, nh = (640, 480)
         images = []
@@ -189,8 +189,13 @@ class ImageManipulationCommands(commands.Cog, name="Image"):
             base.save(out)
 
         # DuckDuckGo image search
-        results = ddg_images(search_term, max_results=10)
-        images = [r["image"] for r in results]
+        with DDGS() as ddgs:
+            results = ddgs.images(keywords=search_term)
+            for result in results:
+                if 'image' in result:
+                    images.append(result['image'])
+                if len(images) >= 10:
+                    break
 
         x = 0
         for i in images:
