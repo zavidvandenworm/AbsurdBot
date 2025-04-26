@@ -6,3 +6,4 @@ glitch_this
 discord.py
 ffmpeg-python
 pedalboard
+duckduckgo_search

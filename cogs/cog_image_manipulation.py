@@ -6,6 +6,7 @@ from PIL import Image, ImageEnhance, ImageChops, ImageDraw, ImageFont
 from discord.ext import commands
 from glitch_this import ImageGlitcher
 from random import randint
+from duckduckgo_search import ddg_images
 from .scripts.bot_global_stuff import *
 import os
 import io
@@ -163,6 +164,49 @@ class ImageManipulationCommands(commands.Cog, name="Image"):
         wtbb(f"top {str(x)} {search_term}", f"{work_dir.directory}/cover.png")
         frames.append(Image.open(f"{work_dir.directory}/cover.png"))
         for i in range(0, x):
+            frames.append(Image.open(f"{work_dir.directory}/{str(i)}_n.png"))
+            frames.append(Image.open(f"{work_dir.directory}/{str(i)}.png"))
+        f1 = frames[0]
+        f1.save(f"{work_dir.directory}/top{str(x)}.gif", format="GIF", append_images=frames,
+                save_all=True, duration=1000, loop=0)
+        await ctx.send(file=discord.File(fp=f"{work_dir.directory}/top{str(x)}.gif"))
+
+    @commands.command(brief="Generate a top 10 list from a query, using DuckDuckGo.")
+    async def top10_ddg(self, ctx, *, search_term: str):
+        nw, nh = (640, 480)
+        images = []
+
+        work_dir = WorkDir()
+        font = ImageFont.truetype("./data/fonts/comic.ttf", 64)
+
+        def wtbb(text: str, out: str):
+            base = Image.new("RGB", (nw, nh), color=(0, 162, 237))
+            d = ImageDraw.Draw(base)
+            w = d.textlength(text, font=font)
+            h = 64
+            d.text(((nw - w) / 1.97, (nh - h) / 1.97), text, fill=(0, 0, 0), font=font)
+            d.text(((nw - w) / 2, (nh - h) / 2), text, fill=(240, 240, 240), font=font)
+            base.save(out)
+
+        # DuckDuckGo image search
+        results = ddg_images(search_term, max_results=10)
+        images = [r["image"] for r in results]
+
+        x = 0
+        for i in images:
+            wtbb(f"number {str(x + 1)}", f"{work_dir.directory}/{str(x)}_n.png")
+            loc = f"{work_dir.directory}/{str(x)}.png"
+            store = io.BytesIO()
+            store.write(requests.get(i).content)
+            image = Image.open(store)
+            image = image.resize((nw, nh))
+            image.save(loc)
+            x += 1
+
+        frames = []
+        wtbb(f"top {str(x)} {search_term}", f"{work_dir.directory}/cover.png")
+        frames.append(Image.open(f"{work_dir.directory}/cover.png"))
+        for i in range(x):
             frames.append(Image.open(f"{work_dir.directory}/{str(i)}_n.png"))
             frames.append(Image.open(f"{work_dir.directory}/{str(i)}.png"))
         f1 = frames[0]
