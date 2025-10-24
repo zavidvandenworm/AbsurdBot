@@ -1,3 +1,4 @@
+import random
 import traceback
 
 from bs4 import BeautifulSoup
@@ -167,60 +168,20 @@ class ImageManipulationCommands(commands.Cog, name="Image"):
             frames.append(Image.open(f"{work_dir.directory}/{str(i)}_n.png"))
             frames.append(Image.open(f"{work_dir.directory}/{str(i)}.png"))
         f1 = frames[0]
+
         gif_fp = f"{work_dir.directory}/top{str(x)}.gif"
         mp4_fp = f"{work_dir.directory}/top{str(x)}.mp4"
+
         f1.save(gif_fp, format="GIF", append_images=frames,
                 save_all=True, duration=1000, loop=0)
-        ffmpeg.input(gif_fp).output(mp4_fp).run()
+
+        input_gif = ffmpeg.input(gif_fp)
+        input_music = f"./data/samples/top10/{random.randint(1, 13)}.mp3"
+
+        ffmpeg.concat(input_gif, input_music, v=1, a=1).output(mp4_fp).run()
+
         await ctx.send(file=discord.File(fp=mp4_fp))
 
-    @commands.command(brief="Generate a top 10 list from a search term(s).")
-    async def top10_ddg(self, ctx, *, search_term: str):
-        nw, nh = (640, 480)
-        images = []
-
-        work_dir = WorkDir()
-        font = ImageFont.truetype("./data/fonts/comic.ttf", 64)
-
-        def wtbb(text: str, out: str):
-            base = Image.new("RGB", (nw, nh), color=(0, 162, 237))
-            d = ImageDraw.Draw(base)
-            w = d.textlength(text, font=font)
-            h = 64
-            d.text(((nw - w) / 1.97, (nh - h) / 1.97), text, fill=(0, 0, 0), font=font)
-            d.text(((nw - w) / 2, (nh - h) / 2), text, fill=(240, 240, 240), font=font)
-            base.save(out)
-
-        # DuckDuckGo image search
-        with DDGS() as ddgs:
-            results = ddgs.images(keywords=search_term)
-            for result in results:
-                if 'image' in result:
-                    images.append(result['image'])
-                if len(images) >= 10:
-                    break
-
-        x = 0
-        for i in images:
-            wtbb(f"number {str(x + 1)}", f"{work_dir.directory}/{str(x)}_n.png")
-            loc = f"{work_dir.directory}/{str(x)}.png"
-            store = io.BytesIO()
-            store.write(requests.get(i).content)
-            image = Image.open(store)
-            image = image.resize((nw, nh))
-            image.save(loc)
-            x += 1
-
-        frames = []
-        wtbb(f"top {str(x)} {search_term}", f"{work_dir.directory}/cover.png")
-        frames.append(Image.open(f"{work_dir.directory}/cover.png"))
-        for i in range(x):
-            frames.append(Image.open(f"{work_dir.directory}/{str(i)}_n.png"))
-            frames.append(Image.open(f"{work_dir.directory}/{str(i)}.png"))
-        f1 = frames[0]
-        f1.save(f"{work_dir.directory}/top{str(x)}.gif", format="GIF", append_images=frames,
-                save_all=True, duration=1000, loop=0)
-        await ctx.send(file=discord.File(fp=f"{work_dir.directory}/top{str(x)}.gif"))
 
     @img.command(brief="Change the brightness of an image.")
     async def brightness(self, ctx, image_url: str, multiplier: float):
