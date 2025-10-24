@@ -8,6 +8,8 @@ from cogs.cog_internet_stuff import InternetCommands
 from cogs.cog_generic import GenericCog
 from os import environ
 
+from cogs.cog_nice_stuff import NiceCommands
+
 TOKEN = environ["DISCORD_TOKEN"]
 
 if TOKEN == "":
@@ -35,6 +37,7 @@ bot = commands.Bot(
 async def main():
     async with bot:
         await bot.add_cog(GenericCog())
+        await bot.add_cog((NiceCommands()))
         await bot.add_cog(InternetCommands())
         await bot.add_cog(ImageManipulationCommands())
         await bot.add_cog(AudioManipulationCommands())
