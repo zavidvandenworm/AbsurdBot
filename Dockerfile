@@ -12,7 +12,4 @@ RUN pip install --no-cache-dir --upgrade pip \
 
 COPY . .
 
-RUN useradd -m absurd
-USER absurd
-
 CMD ["python", "main.py"]
