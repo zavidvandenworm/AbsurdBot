@@ -167,9 +167,12 @@ class ImageManipulationCommands(commands.Cog, name="Image"):
             frames.append(Image.open(f"{work_dir.directory}/{str(i)}_n.png"))
             frames.append(Image.open(f"{work_dir.directory}/{str(i)}.png"))
         f1 = frames[0]
-        f1.save(f"{work_dir.directory}/top{str(x)}.gif", format="GIF", append_images=frames,
+        gif_fp = f"{work_dir.directory}/top{str(x)}.gif"
+        mp4_fp = f"{work_dir.directory}/top{str(x)}.mp4"
+        f1.save(gif_fp, format="GIF", append_images=frames,
                 save_all=True, duration=1000, loop=0)
-        await ctx.send(file=discord.File(fp=f"{work_dir.directory}/top{str(x)}.gif"))
+        ffmpeg.input(gif_fp).output(mp4_fp).run()
+        await ctx.send(file=discord.File(fp=mp4_fp))
 
     @commands.command(brief="Generate a top 10 list from a search term(s).")
     async def top10_ddg(self, ctx, *, search_term: str):
