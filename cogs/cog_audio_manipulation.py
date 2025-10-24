@@ -106,16 +106,21 @@ class AudioManipulationCommands(commands.Cog, name="Audio"):
             timer += .5
             await asyncio.sleep(.5)
 
-    @commands.command(brief="Audio to pad!")
+    @commands.command(brief="Paulstretches audio!")
     async def padgen(self, ctx, audio_link):
         work_dir = WorkDir()
+
         audio_local = media_require(audio_link, "audio", work_dir.directory)
+
         if audio_local is None:
             await ctx.send(embed=e_invalid_generic)
             return
+
         p = subprocess.Popen(["python3", "./scripts/pad_generator.py", work_dir.directory, audio_local],
                              shell=False, cwd=os.path.dirname(os.path.realpath(__file__)))
+
         timer = 0
+
         while True:
             if p.poll() is not None:
                 print(f"completed after {str(timer)} with exit code {str(p.poll())}")
