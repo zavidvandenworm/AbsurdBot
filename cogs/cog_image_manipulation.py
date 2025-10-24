@@ -176,7 +176,7 @@ class ImageManipulationCommands(commands.Cog, name="Image"):
                 save_all=True, duration=1000, loop=0)
 
         input_gif = ffmpeg.input(gif_fp)
-        input_music = f"./data/samples/top10/{random.randint(1, 13)}.mp3"
+        input_music = ffmpeg.input(f"./data/samples/top10/{random.randint(1, 13)}.mp3")
 
         ffmpeg.concat(input_gif, input_music, v=1, a=1).output(mp4_fp).run()
 
