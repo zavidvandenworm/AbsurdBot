@@ -98,4 +98,4 @@ def paulstretch_segment(audio_file: AudioSegment) -> AudioSegment:
 
 audio_filey = AudioSegment.from_file(local_file)
 stretchy = paulstretch_segment(audio_filey)
-stretchy.export(f"{work_dir}/pad.mp3")
+stretchy.export(f"{work_dir}/pad.mp3", bitrate="92k")
