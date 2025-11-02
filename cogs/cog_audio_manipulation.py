@@ -22,6 +22,7 @@ logger = create_logger("audio cog")
 class AudioManipulationCommands(commands.Cog, name="Audio"):
     def __init__(self):
         self.task_manager = TaskManager()
+        self.task_manager.JOB_TIME_LIMIT = 200
         pass
 
     @commands.command(brief="Audio visualizer")
