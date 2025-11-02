@@ -3,11 +3,6 @@ import sys
 
 from pydub import AudioSegment
 
-
-
-work_dir = sys.argv[1]
-local_file = sys.argv[2]
-
 def pydub_to_np(audio: AudioSegment) -> tuple[np.ndarray, int]:
     """
     Converts pydub audio segment into np.float32 of shape [duration_in_seconds*sample_rate, channels],
@@ -17,7 +12,7 @@ def pydub_to_np(audio: AudioSegment) -> tuple[np.ndarray, int]:
     return np.array(audio.get_array_of_samples(), dtype=np.float32).reshape((-1, audio.channels)) / (
             1 << (8 * audio.sample_width - 1)), audio.frame_rate
 
-def stretch(y: np.ndarray, stretch_factor: float, window_size: int = 8192) -> np.ndarray:
+def paulstretch(y: np.ndarray, stretch_factor: float, window_size: int = 8192) -> np.ndarray:
     # prepare input buffer
 
     x = y.copy()
@@ -82,7 +77,7 @@ def stretch(y: np.ndarray, stretch_factor: float, window_size: int = 8192) -> np
 def paulstretch_segment(audio_file: AudioSegment) -> AudioSegment:
     audio_np = pydub_to_np(audio_file)
 
-    stretched = stretch(audio_np[0], 16)
+    stretched = paulstretch(audio_np[0], 16)
 
     stretched_audio = AudioSegment(
         (stretched * (1 << (8 * audio_file.sample_width - 1))).astype(
@@ -93,9 +88,3 @@ def paulstretch_segment(audio_file: AudioSegment) -> AudioSegment:
     )
 
     return stretched_audio
-
-
-
-audio_filey = AudioSegment.from_file(local_file)
-stretchy = paulstretch_segment(audio_filey)
-stretchy.export(f"{work_dir}/pad.mp3", bitrate="92k")

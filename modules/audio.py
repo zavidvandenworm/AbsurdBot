@@ -1,4 +1,5 @@
 import os
+import pathlib
 import random
 from glob import glob
 
@@ -10,6 +11,8 @@ from pydub import AudioSegment
 from pydub.effects import normalize
 
 from cogs.scripts.bot_global_stuff import speed_change
+from modules.paulstretch import paulstretch_segment
+from modules.remixsuite.remix import remix_song
 
 
 def generate_audiovisual(fp: str, out_fp: str):
@@ -72,3 +75,11 @@ def generate_breakcore(work_dir: str, fp: str, out_fp: str, bpm: float):
 
     compress = AudioSegment.from_file(f"{work_dir}/breakcore_generator_unc.mp3")
     compress.export(out_fp, format="mp3")
+
+def generate_remixsuite_remix(fp: str, out_fp: str):
+    remix = remix_song(fp, pathlib.Path(fp).suffix.split(".")[1])
+    remix.export(out_fp, format="mp3")
+
+def generate_paulstretch(fp: str, out_fp: str):
+    stretched = paulstretch_segment(AudioSegment.from_file(fp))
+    stretched.export(out_fp, format="mp3", bitrate="320k")
