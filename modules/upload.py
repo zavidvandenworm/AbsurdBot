@@ -52,7 +52,7 @@ async def handle_upload(ctx: Context, file_path: str):
 
     public_filename = copy_to_public(file_path)
 
-    await ctx.send(f"{public_base_path}static/{public_filename}")
+    await ctx.send(f"{public_base_path}file/{public_filename}")
 
 def prune():
     global max_file_lifespan

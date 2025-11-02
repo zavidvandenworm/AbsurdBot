@@ -26,7 +26,7 @@ class AudioManipulationCommands(commands.Cog, name="Audio"):
 
     @commands.command(brief="Audio visualizer")
     async def audiovisual(self, ctx, audio_url):
-        await ctx.send("Processing, this might take a while!", ephemeral=True)
+        await ctx.send("processing, give it a second", ephemeral=True)
         with tempfile.TemporaryDirectory() as tmpdirname:
             dl = WebFile(audio_url)
             if not dl.fetch():
@@ -127,7 +127,7 @@ class AudioManipulationCommands(commands.Cog, name="Audio"):
 
     @commands.command(brief="Paulstretches audio!")
     async def paulstretch(self, ctx: discord.ext.commands.Context, audio_url):
-        await ctx.send("Processing, this might take a while!", ephemeral=True)
+        await ctx.send("processing, give it a second", ephemeral=True)
         with tempfile.TemporaryDirectory() as tmpdirname:
             dl = WebFile(audio_url)
             if not dl.fetch():
