@@ -14,6 +14,7 @@ from cogs.scripts.bot_global_stuff import speed_change
 from modules.paulstretch import paulstretch_segment
 from modules.remixsuite.remix import remix_song
 
+logo = "./data/logo_audio.png"
 
 def generate_audiovisual(fp: str, out_fp: str):
     size_a = [640, 480]
@@ -80,6 +81,28 @@ def generate_remixsuite_remix(fp: str, out_fp: str):
     remix = remix_song(fp, pathlib.Path(fp).suffix.split(".")[1])
     remix.export(out_fp, format="mp3")
 
-def generate_paulstretch(fp: str, out_fp: str):
+def generate_logo_video_from_audio(fp: str, out_fp: str):
+    img = ffmpeg.input(logo, loop=1, framerate=1)
+    aud = ffmpeg.input(fp)
+
+    (
+        ffmpeg
+        .output(
+            img,
+            aud,
+            out_fp,
+            vcodec="libx264",
+            acodec="copy",
+            shortest=None,
+            pix_fmt="yuv420p"
+        )
+        .overwrite_output()
+        .run(quiet=True)
+    )
+
+def generate_paulstretch(work_dir: str, fp: str, out_fp: str):
+    mp3_fp = os.path.join(work_dir, "tmp.mp3")
     stretched = paulstretch_segment(AudioSegment.from_file(fp))
-    stretched.export(out_fp, format="mp3", bitrate="320k")
+    stretched.export(mp3_fp, format="mp3", bitrate="320k")
+    generate_logo_video_from_audio(mp3_fp, out_fp)
+

@@ -134,9 +134,9 @@ class AudioManipulationCommands(commands.Cog, name="Audio"):
                 return await ctx.send("Failed to download file.")
             fp = dl.save(tmpdirname)
 
-            out_path = f"{tmpdirname}/paul.mp3"
+            out_path = f"{tmpdirname}/paul.mp4"
 
-            job = await self.task_manager.run(generate_paulstretch, fp, out_path)
+            job = await self.task_manager.run(generate_paulstretch, tmpdirname, fp, out_path)
 
             if not job.success:
                 logger.warn(job.message)
