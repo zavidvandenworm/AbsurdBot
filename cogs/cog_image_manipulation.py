@@ -1,115 +1,115 @@
+import pathlib
 import random
+import tempfile
 import traceback
 
+import discord.ui
 from bs4 import BeautifulSoup
 from urllib.parse import parse_qs, urlunparse, urlparse, urlencode
 from PIL import Image, ImageEnhance, ImageChops, ImageDraw, ImageFont
+from discord import Interaction
+from discord._types import ClientT
 from discord.ext import commands
 from glitch_this import ImageGlitcher
+
 from random import randint
-from duckduckgo_search import DDGS
+
+from modules.automodal import automodal
+from modules.image import adjust_image
+from modules.logger import create_logger
+from modules.regex_patterns import URL_RE
+from modules.web_file import WebFile, WebFileTypes
 from .scripts.bot_global_stuff import *
 import os
 import io
 import asyncio
-from .scripts.embeds import *
 import ffmpeg
 
+logger = create_logger("image cog")
 
-async def image_manipulation_template(ctx, image_url: str, mult: float, image_enhance_function, embed_name: str):
-    r = requests.head(image_url)
-    if r.headers["content-type"] not in image_formats:
-        await ctx.send(embed=e_data_badimage)
+
+async def handle_image_edit_modal(interaction: discord.Interaction, brightness, contrast, sharpness):
+    print(brightness, contrast, sharpness)
+
+    web_file = WebFile(self.image_url_input.value)
+
+    if not web_file.fetch(WebFileTypes.IMAGE):
+        await interaction.response.send_message("Your image did not pass the filetype check.", ephemeral=True)
         return
-    download = io.BytesIO()
-    store = io.BytesIO()
-    try:
-        download.write(requests.get(image_url).content)
-        image = Image.open(download)
-        image = image_enhance_function(image).enhance(float(mult))
-        image.save(store, format="png")
-        store.seek(0)
-        await ctx.send(file=discord.File(store, filename="adjusted.png"))
-    except Exception as exc:
-        print(traceback.format_exc())
-        embed = discord.Embed(
-            title=embed_name,
-            description="Something went wrong, please scream at MAB.",
-            color=discord.Color.red()
+
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        path = web_file.save(tmpdirname)
+        p = pathlib.Path(path)
+        out_path = f"{p.parent}/process_{p.name}"
+
+        edit_success = adjust_image(
+            path,
+            out_path,
+            brightness=brightness,
+            contrast=contrast,
+            sharpness=sharpness
         )
-        if len(str(exc)) > 2000:
-            exception_text = "Too long to fit in footer."
-        else:
-            exception_text = str(exc)
-        embed.set_footer(text=f"Exception: {exception_text}")
-        await ctx.send(embed=embed)
+
+        if not edit_success:
+            await interaction.response.send_message("Edit failed.", ephemeral=True)
+            return
+
+        logger.info("edited file")
+
+        file_upload = discord.File(fp=out_path, filename=f"process_{p.name}")
+
+        await interaction.user.send(file=file_upload)
 
 
-async def glitch_template(ctx, image_url, glitch_amount: float, abberation: bool = True):
-    r = requests.head(image_url)
-    if r.headers["content-type"] not in image_formats:
-        embed = discord.Embed(
-            title="Image error",
-            description="The supplied url does not seem to be an image. "
-                        "Was it a direct url? (ends in .png, .jpeg etc.)",
-            color=discord.Color.red()
-        )
-        await ctx.send(embed=embed)
-        return
-    download = io.BytesIO()
-    store = io.BytesIO()
-    try:
-        download.write(requests.get(image_url).content)
-        image = Image.open(download)
-        image = ImageGlitcher().glitch_image(image, glitch_amount=glitch_amount, color_offset=abberation)
-        image.save(store, format="png")
-        store.seek(0)
-        await ctx.send(file=discord.File(store, filename="glitch.png"))
-    except Exception as exc:
-        print(traceback.format_exc())
-        embed = discord.Embed(
-            title="Glitch",
-            description="Something went wrong, please scream at MAB.",
-            color=discord.Color.red()
-        )
-        if len(str(exc)) > 2000:
-            exception_text = "Too long to fit in footer."
-        else:
-            exception_text = str(exc)
-        embed.set_footer(text=f"Exception: {exception_text}")
-        await ctx.send(embed=embed)
+class ImageEditorView(discord.ui.View):
+    def __init__(self, bot: commands.Bot):
+        super().__init__()
+        self.bot = bot
+
+    @discord.ui.button(label="Edit image", style=discord.ButtonStyle.primary)
+    async def run_editor(self, interaction: discord.Interaction, button: discord.ui.Button):
+        edit_modal = automodal("absurdGIMP", {
+            "image_url": {
+                "type": "url",
+                "label": "Brightness (-100 to 100)",
+                "placeholder": 0,
+                "required": True,
+                "default": 0
+            },
+            "brightness": {
+                "type": "number",
+                "label": "Brightness (-100 to 100)",
+                "placeholder": 0,
+                "required": False,
+                "default": 0
+            },
+            "contrast": {
+                "type": "number",
+                "label": "Contrast (-100 to 100)",
+                "placeholder": 0,
+                "required": False,
+                "default": 0
+            },
+            "sharpness": {
+                "type": "number",
+                "label": "Sharpness (-100 to 100)",
+                "placeholder": 0,
+                "required": False,
+                "default": 0
+            }
+        }, handle_image_edit_modal)
+
+        await interaction.response.send_modal(edit_modal)
 
 
 class ImageManipulationCommands(commands.Cog, name="Image"):
-    def __init__(self):
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
         pass
 
-    @commands.group(brief="A group of commands for image manipulation.")
-    async def img(self, ctx):
-        """
-        Run this command to get an overview of all available image editing commands, such as brightness,
-        contrast and more.
-        """
-        img_commands = {
-            "brightness": "Adjust the brightness of an image.\nUsage: $img brightness <image_url> <multiplier>",
-            "contrast": "Adjust the contrast of an image.\nUsage: $img contrast <image_url> <multiplier>",
-            "sharpness": "Adjust the sharpness of an image.\nUsage: $img sharpness <image_url> <multiplier>",
-            "saturation": "Adjust the saturation of an image.\nUsage: $img saturation <image_url> <multiplier>",
-            "glitch": "Add a glitch effect to an image.\nUsage: $img glitch <image_url> <0.1-10>",
-        }
-        if ctx.invoked_subcommand is None:
-            embed = discord.Embed(
-                title="Image manipulation commands",
-                description="A group of commands to edit images.",
-                color=discord.Color.dark_gray()
-            )
-            for x, y in img_commands.items():
-                embed.add_field(
-                    name=x,
-                    value=y,
-                    inline=False
-                )
-            await ctx.send(embed=embed)
+    @commands.command(brief="Image editor.")
+    async def editor(self, ctx: commands.Context):
+        await ctx.send(view=ImageEditorView(bot=self.bot))
 
     @commands.command(brief="Generate a top 10 list from a search term(s).")
     async def top10(self, ctx, *, search_term: str):
@@ -182,35 +182,6 @@ class ImageManipulationCommands(commands.Cog, name="Image"):
 
         await ctx.send(file=discord.File(fp=mp4_fp))
 
-
-    @img.command(brief="Change the brightness of an image.")
-    async def brightness(self, ctx, image_url: str, multiplier: float):
-        """Multiplies the brightness of the given image. A multiplier of 0.5 will halve the brightness."""
-        await image_manipulation_template(ctx, image_url, multiplier, ImageEnhance.Brightness, "Brightness")
-
-    @img.command(brief="Change the contrast of an image.")
-    async def contrast(self, ctx, image_url: str, multiplier: float):
-        """Multiplies the contrast of the given image. A multiplier of 0.5 will halve the contrast."""
-        await image_manipulation_template(ctx, image_url, multiplier, ImageEnhance.Contrast, "Contrast")
-
-    @img.command(brief="Change the saturation of an image.")
-    async def saturation(self, ctx, image_url: str, multiplier: float):
-        """
-        Multiplies the saturation of the given image. A multiplier of 0.5 will halve the saturation, and 0 would
-        make it black and white.
-        """
-        await image_manipulation_template(ctx, image_url, multiplier, ImageEnhance.Color, "Saturation")
-
-    @img.command(brief="Change the sharpness of an image.")
-    async def sharpness(self, ctx, image_url: str, multiplier: float):
-        """Multiplies the sharpness of the given image. A multiplier of 2 will double the sharpness."""
-        await image_manipulation_template(ctx, image_url, multiplier, ImageEnhance.Sharpness, "Contrast")
-
-    @img.command(brief="Add a glitch effect to an image.")
-    async def glitch(self, ctx, image_url: str, glitch_amount: float, chromatic_abberation: bool = False):
-        """Adds a glitch effect to the given image. Takes values from 0-12 (float)"""
-        await glitch_template(ctx, image_url, glitch_amount, chromatic_abberation)
-
     @commands.command(brief="Turn your image into a cover!")
     async def covergen(self, ctx, url):
         r = requests.head(url)
@@ -247,14 +218,14 @@ class ImageManipulationCommands(commands.Cog, name="Image"):
         mp4_path = f"{work_dir.directory}/any2mp4.mp4"
         local_path = media_require(any_url, "audiovideo", work_dir.directory)
         if local_path is None:
-            await ctx.send(embed=e_notavideo)
+            await ctx.send("Not a video")
         with open(local_path, "wb") as f:
             f.write(requests.get(any_url).content)
         (
             ffmpeg
-                .input(local_path)
-                .output(mp4_path)
-                .run()
+            .input(local_path)
+            .output(mp4_path)
+            .run()
         )
         await ctx.send(file=discord.File(fp=mp4_path))
 
@@ -270,7 +241,7 @@ class ImageManipulationCommands(commands.Cog, name="Image"):
         audio_dl = media_require(audio_url, "audio")
         video_out = os.path.abspath(f"{work_dir.directory}/av-overlay-out.mp4")
         if video_dl is None or audio_dl is None:
-            await ctx.send(e_invalid_generic)
+            await ctx.send("Invalid files")
             return
         p = subprocess.Popen(["python3", "audio_overlay.py", str(ctx.author.id), str(video_dl), str(audio_dl),
                               str(bitrate), str(kwargs), str(imgtest), str(video_out)],
@@ -281,7 +252,7 @@ class ImageManipulationCommands(commands.Cog, name="Image"):
                 print(f"completed, with exit code {str(p.poll())}")
                 if p.poll() != 0:
                     print("failed to execute audio_overlay!")
-                    await ctx.send(embed=e_invalid_generic)
+                    await ctx.send(embed="Generic error")
                     return
                 break
             print(f"waiting for audio_overlay ({str(timer)})")

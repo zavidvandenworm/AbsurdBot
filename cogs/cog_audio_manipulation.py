@@ -2,86 +2,84 @@ import asyncio
 import io
 
 import os
+import pathlib
+import tempfile
 
 from discord.ext import commands
 
+from modules.audio import generate_audiovisual, convert_to_mp3, generate_breakcore
+from modules.jobs import TaskManager
+from modules.logger import create_logger
+from modules.upload import handle_upload
+from modules.web_file import WebFile
 from .scripts.bot_global_stuff import *
 from .scripts.embeds import *
 
+logger = create_logger("audio cog")
 
 class AudioManipulationCommands(commands.Cog, name="Audio"):
     def __init__(self):
+        self.task_manager = TaskManager()
         pass
 
-    # @commands.command(brief="Audio visualizer")
-    # async def audiovisual(self, ctx, audio_url):
-    #     www_url = www_dir
-    #     work_dir = WorkDir()
-    #     audio_local = media_require(audio_url, "audio", work_dir.directory)
-    #     if audio_local is False:
-    #         await ctx.send(embed=e_daw_audio)
-    #     p = subprocess.Popen(["python3", "./scripts/audiovisual.py", work_dir.directory, audio_local,
-    #                           str(ctx.author.id)], shell=False,
-    #                          cwd=os.path.dirname(os.path.realpath(__file__)))
-    #     timer = 0
-    #     while True:
-    #         if p.poll() is not None:
-    #             print(f"completed after {str(timer)} with exit code {str(p.poll())}")
-    #             if p.poll() != 0:
-    #                 embed = discord.Embed(
-    #                     title="Visualizer failed!",
-    #                     description="Try converting your audio file using $any2mp3, and retrying."
-    #                 )
-    #                 await ctx.send(embed=embed)
-    #                 return
-    #             final = f"{www_url}/{str(ctx.author.id)}.mp4"
-    #             await ctx.send(final)
-    #             return
-    #         timer += .5
-    #         await asyncio.sleep(.5)
+    @commands.command(brief="Audio visualizer")
+    async def audiovisual(self, ctx, audio_url):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            dl = WebFile(audio_url)
+            if not dl.fetch():
+                return await ctx.send("Failed to download file.")
+            fp = dl.save(tmpdirname)
+
+            out_path = f"{tmpdirname}/visualizer.mp4"
+
+            job = await self.task_manager.run(generate_audiovisual, fp, out_path)
+
+            if not job.success:
+                return await ctx.send("Visualizer failed.")
+
+            await handle_upload(ctx, out_path)
 
     @commands.command(brief="Convert any audio/video file into a mp3!")
-    async def any2mp3(self, ctx, audio_link):
+    async def any2mp3(self, ctx, audio_url):
         """
         Takes a direct link to any audio or video file as an argument, and converts it to mp3.
-        Note that very long audio/video files might not get sent due to filesize limits.
         """
-        work_dir = WorkDir()
-        audio = media_require(audio_link, "audiovideo", work_dir.directory)
-        if audio is None:
-            await ctx.send(embed=e_invalid_generic)
-            return
-        convert = AudioSegment.from_file(audio)
-        convert.export(f"{work_dir.directory}/convert.mp3")
-        await ctx.send(file=discord.File(fp=f"{work_dir.directory}/convert.mp3"))
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            dl = WebFile(audio_url)
+            if not dl.fetch():
+                return await ctx.send("Failed to download file.")
+            fp = dl.save(tmpdirname)
+
+            out_path = f"{tmpdirname}/convert.mp3"
+
+            job = await self.task_manager.run(convert_to_mp3, fp, out_path)
+
+            if not job.success:
+                return await ctx.send("Conversion failed.")
+
+            await handle_upload(ctx, out_path)
 
     @commands.command(brief="Turn any audio file into breakcore!")
-    async def breakcoregen(self, ctx, audio_link, bpm: int, soundpack: str = "default1"):
+    async def breakcore(self, ctx, audio_url, bpm: float):
         """
-        Takes a direct link to an audio file, together with BPM and alternatively a sound pack, and returns a
+        Takes a direct link to an audio file, together with BPM and returns a
         breakcorified version of it.
-        To get a list of sound packs, run `list_samples breakcoregen`.
         """
-        work_dir = WorkDir()
-        audio_file = media_require(audio_link, "audio", work_dir.directory)
-        if audio_file is False:
-            await ctx.send(embed=e_invalid_generic)
-            return
-        p = subprocess.Popen(["python3", "./scripts/breakcore_generator.py", work_dir.directory, audio_file,
-                              str(bpm), str(soundpack)], shell=False, cwd=os.path.dirname(os.path.realpath(__file__)))
-        timer = 0
-        while True:
-            if p.poll() is not None:
-                print(f"completed after {str(timer)} with exit code {str(p.poll())}")
-                if p.poll() != 0:
-                    print("failed to execute breakcoregen!")
-                    await ctx.send(embed=e_breakcoregen_failed)
-                    return
-                final = f"{work_dir.directory}/breakcore_generator.mp3"
-                await ctx.send(file=discord.File(fp=final))
-                return
-            timer += .5
-            await asyncio.sleep(.5)
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            dl = WebFile(audio_url)
+            if not dl.fetch():
+                return await ctx.send("Failed to download file.")
+            fp = dl.save(tmpdirname)
+
+            out_path = f"{tmpdirname}/convert.mp3"
+
+            job = await self.task_manager.run(generate_breakcore, tmpdirname, fp, out_path, bpm)
+
+            if not job.success:
+                logger.warn(job.message)
+                return await ctx.send("Breakcoregenerator failed.")
+
+            await handle_upload(ctx, out_path)
 
     @commands.command(brief="Turn your audio file into a club banger!")
     async def clubgen(self, ctx, audio_link, bpm, target_bpm: int = 0):
@@ -252,17 +250,3 @@ class AudioManipulationCommands(commands.Cog, name="Audio"):
         final.export(output, format="mp3")
         output.seek(0)
         await ctx.send(file=discord.File(fp=output, filename="break.mp3"))
-
-    @commands.command(brief="List all available samples for a certain command.")
-    async def list_samples(self, ctx, list_of):
-        """
-        Lists all available samples/sound packs for a certain command, like the breakcore generator or drum machine.
-        """
-        embed_library = {
-            "breakcoregen": ls_breakcoregen,
-            "drum_machine": ls_drummachine
-        }
-        if list_of in embed_library:
-            await ctx.send(embed=embed_library[list_of])
-        else:
-            await ctx.send("Could not get sample list for that command.")

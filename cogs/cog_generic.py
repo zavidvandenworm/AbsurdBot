@@ -1,52 +1,70 @@
 import traceback
 
 import discord
+from discord import Interaction, Component
 from discord.ext import commands
 import time
 from datetime import datetime
 
+from modules.logger import create_logger
 
-class GenericCog(commands.Cog, name="Internal"):
-    def __init__(self):
-        pass
+logger = create_logger('generic cog')
+
+
+class GenericCog(commands.Cog, name="General"):
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
 
     @commands.Cog.listener(name='on_command')
     async def print(self, ctx):
         server = ctx.guild.name
         user = ctx.author
         command = ctx.message.content
-        print(f'{str(datetime.now().strftime("%d/%m/%Y, %H:%M:%S"))} - {server} > {user} > {command}')
+
+        logger.info(f'{server} > {user} > {command}')
 
     @commands.Cog.listener(name='on_command_error')
     async def error_handle(self, ctx, error):
         if isinstance(error, commands.CommandNotFound):
             pass
+
         server = ctx.guild.name
         user = ctx.author
         command = ctx.command
-        print(traceback.print_exc())
-        print(f'{server} > {user} > {command} > {error}')
+
+        logger.warn(f'{server} > {user} > {command} > {error}')
+
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send(embed = discord.Embed(
+                title = 'Missing argument(s)',
+                description=error
+            ))
+            return
+
         embed = discord.Embed(
-            title="Command error",
-            description=error,
+            title="Something is broken",
+            description="An error has occured while running that command.",
             color=discord.Color.red()
         )
+
         await ctx.send(embed=embed)
 
     @commands.Cog.listener(name='on_message')
     @commands.guild_only()
-    async def okarcanethanks(self, ctx):
+    async def i_dislike_arcane(self, ctx):
         if ctx.guild.id != 924333267845541989:
             return
         if ctx.author.id != 437808476106784770:
             return
-        await ctx.reply("ok arcane thanks")
+        await ctx.add_reaction("🤓")
 
     @commands.command(brief="Sends a bot invite via DM")
     async def invite(self, ctx):
-        embed = discord.Embed(
-            title="Absurdibot invite",
-            description="[Click here](https://discord.com/oauth2/authorize?client_id=948227722382036992&scope=bot&permi"
-                        "ssions=446676913216)"
-        )
-        await ctx.send(embed=embed)
+        view = discord.ui.View()
+
+        view.add_item(discord.ui.Button(
+            label="Click here to invite",
+            style=discord.ButtonStyle.primary,
+            url=f"https://discord.com/oauth2/authorize?client_id={self.bot.application_id}&scope=bot&permissions=446676913216)"))
+
+        await ctx.send(view=view)
