@@ -1,15 +1,11 @@
-FROM python:3.13-slim
+FROM ghcr.io/astral-sh/uv:python3.14-alpine
+
+ADD . /app
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg imagemagick \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache ffmpeg imagemagick
 
-COPY requirements.txt .
+RUN uv sync --frozen
 
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-
-CMD ["python", "main.py"]
+CMD ["uv", "run", "main.py"]
