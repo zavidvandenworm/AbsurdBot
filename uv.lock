@@ -31,7 +31,7 @@ requires-dist = [
     { name = "filetype", specifier = ">=1.2.0" },
     { name = "glitch-this", specifier = ">=1.0.3" },
     { name = "numpy", specifier = ">=2.3.4" },
-    { name = "pedalboard", specifier = ">=0.9.19" },
+    { name = "pedalboard" },
     { name = "pillow", specifier = ">=12.0.0" },
     { name = "pydub", specifier = ">=0.25.1" },
     { name = "requests", specifier = ">=2.32.5" },
