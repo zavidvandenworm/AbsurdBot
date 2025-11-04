@@ -1,13 +1,10 @@
 FROM ghcr.io/astral-sh/uv:python3.14-bookworm-slim
 
+RUN apt-get update && apt-get install -y --no-install-recommends libsndfile1 libatomic1 ffmpeg imagemagick
+
 WORKDIR /app
 
 COPY pyproject.toml uv.lock ./
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        libsndfile1 libatomic1 ffmpeg imagemagick && \
-    rm -rf /var/lib/apt/lists/*
 
 RUN uv sync
 
