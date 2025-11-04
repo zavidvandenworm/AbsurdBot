@@ -6,7 +6,7 @@ COPY pyproject.toml uv.lock ./
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        libsndfile1 libatomic1 ffmpeg && \
+        libsndfile1 libatomic1 ffmpeg imagemagick && \
     rm -rf /var/lib/apt/lists/*
 
 RUN uv sync
