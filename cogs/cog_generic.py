@@ -21,7 +21,7 @@ class GenericCog(commands.Cog, name="General"):
         user = ctx.author
         command = ctx.message.content
 
-        logger.info(f'{server} > {user} > {command}')
+        logger.info(f'[{user}@{server}] {command}')
 
     @commands.Cog.listener(name='on_command_error')
     async def error_handle(self, ctx, error):
