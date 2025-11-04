@@ -8,7 +8,7 @@ from datetime import datetime
 
 from modules.logger import create_logger
 
-logger = create_logger('general')
+logger = create_logger('GENERAL')
 
 
 class GenericCog(commands.Cog, name="General"):
