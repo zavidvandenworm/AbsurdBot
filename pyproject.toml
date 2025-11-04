@@ -19,8 +19,3 @@ dependencies = [
     "uvicorn>=0.38.0",
     "wand>=0.6.13",
 ]
-
-[tool.uv]
-required-environments = [
-    "sys_platform == 'manylinux_2_27' and platform_machine == 'x86_64'",
-]

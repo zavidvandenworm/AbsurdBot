@@ -6,6 +6,6 @@ WORKDIR /app
 
 RUN apk add --no-cache ffmpeg imagemagick
 
-RUN uv sync --frozen
+RUN uv sync
 
 CMD ["uv", "run", "main.py"]
