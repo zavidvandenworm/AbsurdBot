@@ -22,7 +22,5 @@ dependencies = [
 
 [tool.uv]
 required-environments = [
-    "sys_platform == 'manylinux2_27' and platform_machine == 'x86_64'",
     "sys_platform == 'manylinux2_28' and platform_machine == 'x86_64'",
-    "sys_platform == 'linux' and platform_machine == 'x86_64'",
 ]
