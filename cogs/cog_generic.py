@@ -8,7 +8,7 @@ from datetime import datetime
 
 from modules.logger import create_logger
 
-logger = create_logger('generic cog')
+logger = create_logger('general')
 
 
 class GenericCog(commands.Cog, name="General"):
@@ -34,9 +34,9 @@ class GenericCog(commands.Cog, name="General"):
 
         logger.warn(f'{server} > {user} > {command} > {error}')
 
-        if isinstance(error, commands.MissingRequiredArgument):
+        if isinstance(error, (commands.MissingRequiredArgument, commands.BadArgument, commands.TooManyArguments)):
             await ctx.send(embed = discord.Embed(
-                title = 'Missing argument(s)',
+                title = 'Missing, invalid or too many argument(s).',
                 description=error
             ))
             return

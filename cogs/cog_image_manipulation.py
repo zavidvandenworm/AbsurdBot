@@ -28,10 +28,10 @@ import ffmpeg
 logger = create_logger("image cog")
 
 
-async def handle_image_edit_modal(interaction: discord.Interaction, brightness, contrast, sharpness):
+async def handle_image_edit_modal(interaction: discord.Interaction, image_url, brightness, contrast, sharpness):
     print(brightness, contrast, sharpness)
 
-    web_file = WebFile(self.image_url_input.value)
+    web_file = WebFile(image_url)
 
     if not web_file.fetch(WebFileTypes.IMAGE):
         await interaction.response.send_message("Your image did not pass the filetype check.", ephemeral=True)
@@ -51,6 +51,7 @@ async def handle_image_edit_modal(interaction: discord.Interaction, brightness, 
         )
 
         if not edit_success:
+            logger.info("edit failed")
             await interaction.response.send_message("Edit failed.", ephemeral=True)
             return
 
@@ -58,7 +59,7 @@ async def handle_image_edit_modal(interaction: discord.Interaction, brightness, 
 
         file_upload = discord.File(fp=out_path, filename=f"process_{p.name}")
 
-        await interaction.user.send(file=file_upload)
+        await interaction.response.send_message(file=file_upload)
 
 
 class ImageEditorView(discord.ui.View):
@@ -71,10 +72,10 @@ class ImageEditorView(discord.ui.View):
         edit_modal = automodal("absurdGIMP", {
             "image_url": {
                 "type": "url",
-                "label": "Brightness (-100 to 100)",
-                "placeholder": 0,
+                "label": "Image URL",
+                "placeholder": "",
                 "required": True,
-                "default": 0
+                "default": ""
             },
             "brightness": {
                 "type": "number",
