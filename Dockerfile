@@ -5,7 +5,7 @@ ADD . /app
 WORKDIR /app
 
 RUN apt update
-RUN apt install --no-cache ffmpeg imagemagick
+RUN apt install ffmpeg imagemagick
 
 RUN uv sync
 
