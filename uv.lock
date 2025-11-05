@@ -16,6 +16,7 @@ dependencies = [
     { name = "numpy" },
     { name = "pedalboard" },
     { name = "pillow" },
+    { name = "pychord" },
     { name = "pydub" },
     { name = "requests" },
     { name = "uvicorn" },
@@ -33,6 +34,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.3.4" },
     { name = "pedalboard" },
     { name = "pillow", specifier = ">=12.0.0" },
+    { name = "pychord", specifier = ">=1.2.2" },
     { name = "pydub", specifier = ">=0.25.1" },
     { name = "requests", specifier = ">=2.32.5" },
     { name = "uvicorn", specifier = ">=0.38.0" },
@@ -725,6 +727,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/cb/ef/3c6ecf8b317aa982f309835e8f96987466123c6e596646d4e6a1dfcd080f/propcache-0.4.1-cp314-cp314t-win_amd64.whl", hash = "sha256:990f6b3e2a27d683cb7602ed6c86f15ee6b43b1194736f9baaeb93d0016633b1", size = 46259, upload-time = "2025-10-08T19:48:34.226Z" },
     { url = "https://files.pythonhosted.org/packages/c4/2d/346e946d4951f37eca1e4f55be0f0174c52cd70720f84029b02f296f4a38/propcache-0.4.1-cp314-cp314t-win_arm64.whl", hash = "sha256:ecef2343af4cc68e05131e45024ba34f6095821988a9d0a02aa7c73fcc448aa9", size = 40428, upload-time = "2025-10-08T19:48:35.441Z" },
     { url = "https://files.pythonhosted.org/packages/5b/5a/bc7b4a4ef808fa59a816c17b20c4bef6884daebbdf627ff2a161da67da19/propcache-0.4.1-py3-none-any.whl", hash = "sha256:af2a6052aeb6cf17d3e46ee169099044fd8224cbaf75c76a2ef596e8163e2237", size = 13305, upload-time = "2025-10-08T19:49:00.792Z" },
+]
+
+[[package]]
+name = "pychord"
+version = "1.2.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/cd/8b/1f0bfd3dd71f9677aae1d8cfa56c51bff8735efcf5b2c14a721685a632a2/pychord-1.2.2.tar.gz", hash = "sha256:c4356030e862c1f271b89964149531ab3f2a70ea6699918e6ac93f02c5f97877", size = 15993, upload-time = "2023-12-31T05:09:16.846Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a0/06/c589ecf304d44098dd3e4a08b692bb5024818c24d37abc5c0d9421f845f4/pychord-1.2.2-py2.py3-none-any.whl", hash = "sha256:d111f9fcce8c150cd3b9de2b80b8f6301a3ac342c13a7ac687d74cb60320ed16", size = 12697, upload-time = "2023-12-31T05:09:15.209Z" },
 ]
 
 [[package]]

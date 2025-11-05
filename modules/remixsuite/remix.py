@@ -1,11 +1,14 @@
 import logging
+import pathlib
 import random
 import sys
 import tempfile
 from io import BytesIO
+from random import shuffle
 
 from pydub import AudioSegment
 from pydub.effects import normalize
+from pydub.utils import make_chunks
 from typing_extensions import BinaryIO
 
 from .chop_with_rhythm import ffmpeg_chop_with_rhythm
@@ -25,20 +28,21 @@ DEFAULT_AUDIO_FORMAT = "wav"
 
 
 def get_random_sections_from_segment(seg: AudioSegment, bpm: float) -> AudioSegment:
-    dice_duration = get_segment_duration(bpm)
+    dice_duration = get_segment_duration(bpm) * 1000
+    print(f"---------- {dice_duration} ----------")
+
+    s = make_chunks(seg, dice_duration)
+
+    loudness_sort = sorted(s, key=lambda c: c.dBFS, reverse=True)
+
+    pick = loudness_sort[:12]
+    shuffle(pick)
+    pick = pick[:4]
 
     diced_segments = []
 
-    for i in range(4):
-        i = 0
-        while True:
-            chop = random_block_position_within_range(len(seg), int(dice_duration * 1000))
-            chopped_seg = seg[chop[0]:chop[1]]
-            if chopped_seg.dBFS > -6 or i > 5:
-                break
-
-            i += 1
-        diced_seg = apply_random_rhythm_to_segment(chopped_seg, bpm, i % 2 != 0)
+    for i, p in enumerate(pick):
+        diced_seg = apply_random_rhythm_to_segment(p, bpm, i % 4 == 0)
         diced_segments.append(diced_seg)
 
     appended_segments = append_segments(diced_segments)
@@ -95,8 +99,7 @@ def overlay_break(seg: AudioSegment, bpm: float):
 
     return seg
 
-
-def remix_song(sample: str, audio_format: str | None = None) -> AudioSegment:
+def remix_song_original(sample: str, audio_format: str | None = None) -> AudioSegment:
     bpm = 150.0
 
     sample = prepare_audio(sample, audio_format)
@@ -127,5 +130,27 @@ def remix_song(sample: str, audio_format: str | None = None) -> AudioSegment:
     track = track + 3
 
     track = compress_audiosegment(track)
+
+    return track
+
+
+def remix_song(sample: str, bpm: float, target_bpm: float | None = None) -> AudioSegment:
+    sample = prepare_audio(sample, pathlib.Path(sample).suffix.split(".")[1])
+
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        temp_fp = f"{tmpdirname}/temp.wav"
+
+        chops = get_random_sections_from_segment(sample, bpm)
+
+    track = AudioSegment.silent(0)
+
+    for c in chops:
+        track += c
+
+    track = compress_audiosegment(track)
+
+    if target_bpm is not None:
+        stretch_rate = target_bpm / bpm
+        track = stretch_segment(track, stretch_rate)
 
     return track

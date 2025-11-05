@@ -14,6 +14,7 @@ dependencies = [
     "numpy>=2.3.4",
     "pedalboard",
     "pillow>=12.0.0",
+    "pychord>=1.2.2",
     "pydub>=0.25.1",
     "requests>=2.32.5",
     "uvicorn>=0.38.0",

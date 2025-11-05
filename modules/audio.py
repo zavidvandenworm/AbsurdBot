@@ -38,6 +38,14 @@ def convert_to_mp3(fp: str, out_fp: str):
         .run(quiet=True, overwrite_output=True)
     )
 
+def convert_to_mp4(fp: str, out_fp: str):
+    (
+        ffmpeg
+        .input(fp)
+        .output(out_fp)
+        .run(quiet=True, overwrite_output=True)
+    )
+
 
 def generate_breakcore(work_dir: str, fp: str, out_fp: str, bpm: float):
     sound_packs = []
@@ -77,8 +85,8 @@ def generate_breakcore(work_dir: str, fp: str, out_fp: str, bpm: float):
     compress = AudioSegment.from_file(f"{work_dir}/breakcore_generator_unc.mp3")
     compress.export(out_fp, format="mp3")
 
-def generate_remixsuite_remix(fp: str, out_fp: str):
-    remix = remix_song(fp, pathlib.Path(fp).suffix.split(".")[1])
+def generate_remixsuite_remix(fp: str, out_fp: str, bpm: float, target_bpm: float | None = None):
+    remix = remix_song(fp, bpm, target_bpm)
     remix.export(out_fp, format="mp3")
 
 def generate_logo_video_from_audio(fp: str, out_fp: str):

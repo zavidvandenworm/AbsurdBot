@@ -74,10 +74,10 @@ def paulstretch(y: np.ndarray, stretch_factor: float, window_size: int = 8192) -
 
     return output_buffer
 
-def paulstretch_segment(audio_file: AudioSegment) -> AudioSegment:
+def paulstretch_segment(audio_file: AudioSegment, stretch_factor: float = 16) -> AudioSegment:
     audio_np = pydub_to_np(audio_file)
 
-    stretched = paulstretch(audio_np[0], 16)
+    stretched = paulstretch(audio_np[0], stretch_factor)
 
     stretched_audio = AudioSegment(
         (stretched * (1 << (8 * audio_file.sample_width - 1))).astype(

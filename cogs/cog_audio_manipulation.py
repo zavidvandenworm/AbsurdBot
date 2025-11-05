@@ -1,15 +1,15 @@
-import asyncio
 import io
 
 import os
-import pathlib
 import tempfile
 
 import discord.ext.commands
 from discord.ext import commands
 
-from modules.audio import generate_audiovisual, convert_to_mp3, generate_breakcore, generate_remixsuite_remix, \
+from modules.audio import generate_audiovisual, generate_breakcore, generate_remixsuite_remix, \
     generate_paulstretch
+from modules.classic_music_generators.chordgen import generate_chord
+from modules.classic_music_generators.club import generate_club
 from modules.jobs import TaskManager
 from modules.logger import create_logger
 from modules.upload import handle_upload
@@ -30,7 +30,7 @@ class AudioManipulationCommands(commands.Cog, name="Audio"):
         await ctx.send("processing, give it a second", ephemeral=True)
         with tempfile.TemporaryDirectory() as tmpdirname:
             dl = WebFile(audio_url)
-            if not dl.fetch():
+            if not dl.check():
                 return await ctx.send("Failed to download file.")
             fp = dl.save(tmpdirname)
 
@@ -43,26 +43,6 @@ class AudioManipulationCommands(commands.Cog, name="Audio"):
 
             await handle_upload(ctx, out_path)
 
-    @commands.command(brief="Convert any audio/video file into a mp3!")
-    async def any2mp3(self, ctx, audio_url):
-        """
-        Takes a direct link to any audio or video file as an argument, and converts it to mp3.
-        """
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            dl = WebFile(audio_url)
-            if not dl.fetch():
-                return await ctx.send("Failed to download file.")
-            fp = dl.save(tmpdirname)
-
-            out_path = f"{tmpdirname}/convert.mp3"
-
-            job = await self.task_manager.run(convert_to_mp3, fp, out_path)
-
-            if not job.success:
-                return await ctx.send("Conversion failed.")
-
-            await handle_upload(ctx, out_path)
-
     @commands.command(brief="Turn any audio file into breakcore!")
     async def breakcore(self, ctx, audio_url, bpm: float):
         """
@@ -71,7 +51,7 @@ class AudioManipulationCommands(commands.Cog, name="Audio"):
         """
         with tempfile.TemporaryDirectory() as tmpdirname:
             dl = WebFile(audio_url)
-            if not dl.fetch():
+            if not dl.check():
                 return await ctx.send("Failed to download file.")
             fp = dl.save(tmpdirname)
 
@@ -86,16 +66,16 @@ class AudioManipulationCommands(commands.Cog, name="Audio"):
             await handle_upload(ctx, out_path)
 
     @commands.command(brief="Remix a song. Basically breakcoregen v2")
-    async def remix(self, ctx, audio_url):
+    async def remix(self, ctx, audio_url: str, bpm: float, target_bpm: float | None = None):
         with tempfile.TemporaryDirectory() as tmpdirname:
             dl = WebFile(audio_url)
-            if not dl.fetch():
+            if not dl.check():
                 return await ctx.send("Failed to download file.")
             fp = dl.save(tmpdirname)
 
             out_path = f"{tmpdirname}/convert.mp3"
 
-            job = await self.task_manager.run(generate_remixsuite_remix, fp, out_path)
+            job = await self.task_manager.run(generate_remixsuite_remix, fp, out_path, bpm, target_bpm)
 
             if not job.success:
                 logger.warn(job.message)
@@ -104,34 +84,39 @@ class AudioManipulationCommands(commands.Cog, name="Audio"):
             await handle_upload(ctx, out_path)
 
     @commands.command(brief="Turn your audio file into a club banger!")
-    async def clubgen(self, ctx, audio_link, bpm, target_bpm: int = 0):
-        work_dir = WorkDir()
-        audio_local = media_require(audio_link, "audio", work_dir.directory)
-        if audio_local is None:
-            await ctx.send(embed=e_invalid_generic)
-            return
-        p = subprocess.Popen(["python3", "./scripts/club_generator.py", work_dir.directory, audio_local,
-                              str(bpm), str(target_bpm), url2ext(audio_link)
-                              ], shell=False, cwd=os.path.dirname(os.path.realpath(__file__)))
-        timer = 0
-        while True:
-            if p.poll() is not None:
-                print(f"completed after {str(timer)} with exit code {str(p.poll())}")
-                if p.poll() != 0:
-                    await ctx.send(embed=e_breakcoregen_failed)
-                    return
-                final = f"{work_dir.directory}/club.mp3"
-                await ctx.send(file=discord.File(fp=final))
-                return
-            timer += .5
-            await asyncio.sleep(.5)
+    async def club(self, ctx, audio_url, bpm, target_bpm: int = 0):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            dl = WebFile(audio_url)
+            if not dl.check():
+                return await ctx.send("Failed to download file.")
+            fp = dl.save(tmpdirname)
 
-    @commands.command(brief="Paulstretches audio!")
+            out_path = f"{tmpdirname}/club.mp3"
+
+            job = await self.task_manager.run(generate_club, tmpdirname, fp, bpm, target_bpm)
+
+            if not job.success:
+                await ctx.send("Club generator failed.")
+
+            await handle_upload(ctx, out_path)
+
+
+    @commands.command(brief="Generate a chord progression.")
+    async def chord(self, ctx: commands.Context, bpm: float = 160):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            out_fp = f"{tmpdirname}/chord.mp3"
+            job = await self.task_manager.run(generate_chord, out_fp, bpm)
+            if not job.success:
+                return await ctx.send(f"Chord generator failed. {job.message}")
+            await handle_upload(ctx, out_fp)
+
+
+    @commands.command(brief="Paulstretches audio.")
     async def paulstretch(self, ctx: discord.ext.commands.Context, audio_url):
         await ctx.send("processing, give it a second", ephemeral=True)
         with tempfile.TemporaryDirectory() as tmpdirname:
             dl = WebFile(audio_url)
-            if not dl.fetch():
+            if not dl.check():
                 return await ctx.send("Failed to download file.")
             fp = dl.save(tmpdirname)
 
@@ -144,6 +129,7 @@ class AudioManipulationCommands(commands.Cog, name="Audio"):
                 return await ctx.send("Paulstretch failed.")
 
             await handle_upload(ctx, out_path)
+
 
     @commands.command(brief="Append (many) audio files")
     async def audio_append(self, ctx, *args):
@@ -172,29 +158,6 @@ class AudioManipulationCommands(commands.Cog, name="Audio"):
             processed = audio[int(start_ms):int(end_ms)]
         processed.export(f"{work_dir.directory}/cut.mp3", format="mp3")
         await ctx.send(file=discord.File(fp=f"{work_dir.directory}/cut.mp3"))
-
-    # @commands.command(brief="Compress an audio file using Xfer's OTT")
-    # async def plugin(self, ctx, audio_file):
-    #     work_dir = WorkDir()
-    #     audio_local = media_require(audio_file, "audio", work_dir.directory)
-    #     if audio_local is False:
-    #         await ctx.send(embed=e_invalid_generic)
-    #         return
-    #     p = subprocess.Popen(["python3", "./vst-process.py", work_dir.directory, audio_local], shell=False,
-    #                          cwd=os.path.dirname(os.path.realpath(__file__)))
-    #     timer = 0
-    #     while True:
-    #         if p.poll() is not None:
-    #             print(f"completed after {str(timer)} with exit code {str(p.poll())}")
-    #             if p.poll() != 0:
-    #                 print("failed to execute ott!")
-    #                 await ctx.send(embed=e_ott_failed)
-    #                 return
-    #             final = f"{work_dir.directory}/ott.mp3"
-    #             await ctx.send(file=discord.File(fp=final))
-    #             return
-    #         timer += .5
-    #         await asyncio.sleep(.5)
 
     @commands.command(brief="A drum machine!")
     async def drum_machine(self, ctx, beats: str, bpm: int, sample: str, overlay_audio: str = None):

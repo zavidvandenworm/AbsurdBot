@@ -42,7 +42,7 @@ class WebFile:
                 break
         return self.type
 
-    def fetch(self, allowed_type: WebFileTypes | None = None) -> bool:
+    def check(self, allowed_type: WebFileTypes | None = None) -> bool:
         headers = self.head()
         self.detect_type(headers)
 

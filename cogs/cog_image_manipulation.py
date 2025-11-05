@@ -33,7 +33,7 @@ async def handle_image_edit_modal(interaction: discord.Interaction, image_url, b
 
     web_file = WebFile(image_url)
 
-    if not web_file.fetch(WebFileTypes.IMAGE):
+    if not web_file.check(WebFileTypes.IMAGE):
         await interaction.response.send_message("Your image did not pass the filetype check.", ephemeral=True)
         return
 
